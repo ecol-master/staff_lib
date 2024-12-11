@@ -1,2 +1,3 @@
-pub mod consultant;
+pub mod ceo;
 pub mod manager;
+pub mod worker;

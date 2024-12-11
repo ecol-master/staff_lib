@@ -1,3 +1,9 @@
+use crate::types::StaffID;
+
 pub enum StaffError {
-    InsufficientResourcesError(String),
+    InsufficientResourcesError,
+
+    EmployeeNotFound(StaffID),
+
+    EmployeeHasNoSupervisor(StaffID),
 }

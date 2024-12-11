@@ -1,22 +1,37 @@
-use crate::types::{Resource, Result};
+use crate::types::{Resource, Result, StaffID};
 use std::cell::RefCell;
-use uuid::Uuid;
+use std::rc::{Rc, Weak};
 
-pub trait Person {
-    fn get_id(&self) -> Uuid;
-}
+///
+pub type EmployeeRef = Rc<RefCell<Box<dyn Employee>>>;
+pub type SupervisorRef = Weak<RefCell<Box<dyn Supervisor>>>;
 
-pub trait Supervisor: Person {
-    fn hire(&self, employee: RefCell<Box<dyn Employee>>) -> Result<()>;
+/// [`StaffEntity`] provides basic methods for company staff entity
+pub trait StaffEntity {
+    fn get_id(&self) -> StaffID;
 
-    fn layoff(&self, employee: RefCell<Box<dyn Employee>>) -> Result<()>;
-
-    fn send_resources(&self, amount: Resource, employee: RefCell<Box<dyn Employee>>) -> Resource;
-}
-
-pub trait Employee: Person {
-    fn set_supervisor(&mut self, sv: RefCell<Box<dyn Supervisor>>) -> Result<()>;
-
-    /// Method returns the amount of spended resources
+    /// Method returns an [`crate::errors::StaffError::InsufficientResourcesError`] if staff entity resource is not enough
     fn spend(&mut self, amount: Resource) -> Result<()>;
+
+    ///
+    fn recieve_resource(&mut self, amount: Resource) -> Result<()>;
+}
+
+/// [`Supervisor`] extends the [`StaffEntity`] object
+pub trait Supervisor: StaffEntity {
+    /// Hire new employee to the company
+    fn hire(&mut self, employee: EmployeeRef) -> Result<()>;
+
+    /// Layoff employee
+    fn layoff(&mut self, employee_id: &StaffID) -> Result<EmployeeRef>;
+
+    /// Sends the resource to employee from the  current supervisor's subordinates list
+    fn send_resources(&mut self, amount: Resource, employee_id: &StaffID) -> Result<()>;
+}
+
+pub trait Employee: StaffEntity {
+    /// Set supervisor for concrete employee
+    fn set_supervisor(&mut self, sv: SupervisorRef) -> Result<()>;
+
+    fn on_layoff(&mut self) -> Result<()>;
 }

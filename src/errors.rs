@@ -1,9 +1,12 @@
-use crate::types::StaffID;
+use uuid::Uuid;
 
+#[derive(Debug)]
 pub enum StaffError {
     InsufficientResourcesError,
 
-    EmployeeNotFound(StaffID),
+    EmployeeNotFound(Uuid),
 
-    EmployeeHasNoSupervisor(StaffID),
+    EmployeeAlreadyExists(Uuid),
+
+    EmployeeHasNoSupervisor(Uuid),
 }

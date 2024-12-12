@@ -3,5 +3,8 @@ name = "gear_tech_task"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "staff_lib"
+
 [dependencies]
-uuid = "1.11.0"
+uuid = { version = "1.11.0", features = ["v4"] }

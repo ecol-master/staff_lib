@@ -1,17 +1,25 @@
+use crate::company::Company;
 use crate::errors::StaffError;
-use crate::traits::{EmployeeRef, StaffEntity, Supervisor};
+use crate::traits::{StaffEntity, StaffEntityRef};
 use crate::types::{Resource, Result, StaffID};
+use std::any::Any;
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::collections::HashSet;
+use std::rc::Rc;
+use uuid::Uuid;
 
 pub struct CEO {
-    id: StaffID,
     resource: Resource,
-    subordinates: HashMap<StaffID, EmployeeRef>,
+    company: Rc<RefCell<Company>>,
 }
 
-impl StaffEntity for CEO {
-    fn get_id(&self) -> StaffID {
-        self.id
+impl CEO {
+    pub fn new(company: Rc<RefCell<Company>>) -> Self {
+        Self {
+            resource: 10000,
+            company,
+        }
     }
 
     fn spend(&mut self, amount: Resource) -> Result<()> {
@@ -27,42 +35,18 @@ impl StaffEntity for CEO {
         self.resource += amount;
         Ok(())
     }
-}
 
-impl Supervisor for CEO {
-    fn hire(&mut self, employee: EmployeeRef) -> Result<()> {
-        let id = employee.borrow().get_id();
-        match self.subordinates.insert(id, employee) {
-            Some(_) => Ok(()),
-            None => Err(StaffError::EmployeeNotFound(id)),
-        }
+    fn hire_manager(&mut self, employee_id: StaffEntityRef) -> Result<()> {
+        todo!()
     }
 
     /// Layoff employee
-    fn layoff(&mut self, employee_id: &StaffID) -> Result<EmployeeRef> {
-        match self.subordinates.remove(employee_id) {
-            Some(e) => {
-                e.borrow_mut().on_layoff()?;
-                Ok(e)
-            }
-            None => Err(StaffError::EmployeeNotFound(*employee_id)),
-        }
+    fn layoff(&mut self, employee_id: &Uuid) -> Result<StaffEntityRef> {
+        todo!()
     }
 
     /// Sends the resource to employee from the  current supervisor's subordinates list
-    fn send_resources(&mut self, amount: Resource, employee_id: &StaffID) -> Result<()> {
-        if self.resource < amount {
-            return Err(StaffError::InsufficientResourcesError);
-        }
-
-        let employee = match self.subordinates.get(employee_id) {
-            Some(e) => e,
-            None => return Err(StaffError::EmployeeNotFound(*employee_id)),
-        };
-
-        employee.borrow_mut().recieve_resource(amount)?;
-        self.resource -= amount;
-
-        Ok(())
+    fn send_resources(&mut self, amount: Resource, employee_id: &Uuid) -> Result<()> {
+        todo!()
     }
 }

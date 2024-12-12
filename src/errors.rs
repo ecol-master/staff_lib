@@ -2,7 +2,7 @@ use uuid::Uuid;
 
 #[derive(Debug)]
 pub enum StaffError {
-    InsufficientResourcesError,
+    InsufficientResourcesError(Uuid),
 
     EmployeeNotFound(Uuid),
 

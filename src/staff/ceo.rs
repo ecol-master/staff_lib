@@ -1,52 +1,100 @@
 use crate::company::Company;
 use crate::errors::StaffError;
-use crate::traits::{StaffEntity, StaffEntityRef};
-use crate::types::{Resource, Result, StaffID};
-use std::any::Any;
+use crate::staff::{manager::Manager, worker::Worker};
+use crate::traits::{StaffEntity, Supervisor};
+use crate::types::{Resource, Result};
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::collections::HashSet;
 use std::rc::Rc;
 use uuid::Uuid;
 
 pub struct CEO {
+    id: Uuid,
     resource: Resource,
     company: Rc<RefCell<Company>>,
+    subordinates: HashSet<Uuid>,
 }
 
 impl CEO {
     pub fn new(company: Rc<RefCell<Company>>) -> Self {
         Self {
+            id: Uuid::new_v4(),
             resource: 10000,
             company,
+            subordinates: HashSet::new(),
         }
     }
+}
 
-    fn spend(&mut self, amount: Resource) -> Result<()> {
+impl StaffEntity for CEO {
+    fn get_id(&self) -> Uuid {
+        self.id
+    }
+
+    fn get_resource_amount(&self) -> Resource {
+        self.resource
+    }
+
+    fn spend(&mut self, amount: Resource) -> Result<Resource> {
         if self.resource < amount {
-            return Err(StaffError::InsufficientResourcesError);
+            return Err(StaffError::InsufficientResourcesError(self.id));
         }
 
         self.resource -= amount;
-        Ok(())
+        Ok(amount)
+    }
+
+    fn send_resource(&mut self, to: Uuid, amount: Resource) -> Result<Resource> {
+        self.company.borrow().transfer(self.id, to, amount)
     }
 
     fn recieve_resource(&mut self, amount: Resource) -> Result<()> {
         self.resource += amount;
         Ok(())
     }
+}
 
-    fn hire_manager(&mut self, employee_id: StaffEntityRef) -> Result<()> {
-        todo!()
+impl Supervisor for CEO {
+    fn hire_employee(&mut self, employee: Rc<RefCell<Worker>>) -> Result<Rc<RefCell<Worker>>> {
+        let worker = self
+            .company
+            .as_ref()
+            .borrow_mut()
+            .add_employee(employee, self.id)?;
+        self.subordinates.insert(worker.as_ref().borrow().get_id());
+        Ok(worker)
     }
 
-    /// Layoff employee
-    fn layoff(&mut self, employee_id: &Uuid) -> Result<StaffEntityRef> {
-        todo!()
+    fn hire_manager(&mut self, manager: Rc<RefCell<Manager>>) -> Result<Rc<RefCell<Manager>>> {
+        let manager = self
+            .company
+            .as_ref()
+            .borrow_mut()
+            .add_manager(manager, self.id)?;
+
+        self.subordinates.insert(manager.as_ref().borrow().get_id());
+        Ok(manager)
     }
 
-    /// Sends the resource to employee from the  current supervisor's subordinates list
-    fn send_resources(&mut self, amount: Resource, employee_id: &Uuid) -> Result<()> {
-        todo!()
+    fn layoff_employee(&mut self, employee_id: Uuid) -> Result<Rc<RefCell<Worker>>> {
+        self.company
+            .as_ref()
+            .borrow_mut()
+            .layoff_worker(employee_id, self.id)
+    }
+
+    fn layoff_manager(&mut self, manager_id: Uuid) -> Result<Rc<RefCell<Manager>>> {
+        self.company
+            .as_ref()
+            .borrow_mut()
+            .layoff_manager(manager_id, self.id)
+    }
+
+    fn assume_subordinates(&mut self, subordinates: HashSet<Uuid>) {
+        self.subordinates.extend(subordinates);
+    }
+
+    fn release_subordinates(&mut self) -> HashSet<Uuid> {
+        std::mem::replace(&mut self.subordinates, HashSet::new())
     }
 }

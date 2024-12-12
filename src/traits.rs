@@ -1,47 +1,31 @@
+use crate::staff::{manager::Manager, worker::Worker};
 use crate::types::{Resource, Result};
 use std::cell::RefCell;
 use std::rc::Rc;
+use uuid::Uuid;
 
 /// [`StaffEntity`] provides basic methods for company staff entity
 pub trait StaffEntity {
-    /// Method returns an [`crate::errors::StaffError::InsufficientResourcesError`] if staff entity resource is not enough
+    fn get_id(&self) -> Uuid;
+
+    /// Method returns an [`crate::errors::StaffError::InsufficientResourcesError`]
     fn spend(&mut self, amount: Resource) -> Result<()>;
 
-    ///
     fn recieve_resource(&mut self, amount: Resource) -> Result<()>;
 }
 
-pub type StaffEntityRef = Rc<RefCell<dyn StaffEntity>>;
+/// [`Employee`]
+pub trait Employee {
+    fn get_supervisor_id(&self) -> Option<Uuid>;
 
-/*
-/// [`Supervisor`] extends the [`StaffEntity`] object
-pub trait Supervisor: StaffEntity {
-    /// Hire new employee to the company
-    fn hire(&mut self, employee: EmployeeRef) -> Result<()>;
-
-    /// Layoff employee
-    fn layoff(&mut self, employee_id: &StaffID) -> Result<EmployeeRef>;
-
-    /// Sends the resource to employee from the  current supervisor's subordinates list
-    fn send_resources(&mut self, amount: Resource, employee_id: &StaffID) -> Result<()>;
-
-    fn as_any(&self) -> &dyn Any;
+    fn set_supervisor_id(&mut self, supervisor_id: Option<Uuid>);
 }
 
-pub trait Employee: StaffEntity {
-    /// Set supervisor for concrete employee
-    fn set_supervisor(&mut self, sv: SupervisorRef) -> Result<()>;
+/// [`Supervisor`]
+pub trait Supervisor {
+    fn hire_employee(&self, employee: Rc<RefCell<Worker>>) -> Result<Rc<RefCell<Worker>>>;
+    fn hire_manager(&self, manager: Rc<RefCell<Manager>>) -> Result<Rc<RefCell<Manager>>>;
 
-    fn on_layoff(&mut self) -> Result<()>;
-
-    fn as_any(&self) -> &dyn Any;
+    fn layoff_employee(&self, employee: Rc<RefCell<Worker>>) -> Result<Rc<RefCell<Worker>>>;
+    fn layoff_manager(&self, employee: Rc<RefCell<Worker>>) -> Result<Rc<RefCell<Worker>>>;
 }
-
-pub trait Manager: Supervisor + Employee {}
-
-pub trait TopManager: Supervisor + StaffEntity {}
-
-pub trait StaffStorage{
-    fn
-}
-*/

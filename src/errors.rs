@@ -8,5 +8,5 @@ pub enum StaffError {
 
     EmployeeAlreadyExists(Uuid),
 
-    EmployeeHasNoSupervisor(Uuid),
+    NotSupervisorFor(Uuid, Uuid),
 }

@@ -1,224 +1,175 @@
 use crate::errors::StaffError;
-use crate::staff::{ceo::CEO, manager::Manager, worker::Worker};
-use crate::traits::{StaffEntity, Supervisor};
-use crate::types::{Resource, Result};
-use std::cell::RefCell;
+use crate::staff::ceo::CEO;
+use crate::traits::StaffEntity;
+use crate::types::{Resource, Result, Staff};
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::rc::Rc;
 use uuid::Uuid;
 
 pub struct Company {
-    ceo: Option<Rc<RefCell<CEO>>>,
-    managers: HashMap<Uuid, (Rc<RefCell<Manager>>, Uuid)>,
-    employes: HashMap<Uuid, (Rc<RefCell<Worker>>, Uuid)>,
+    ceo_id: Option<Uuid>,
+    staff: HashMap<Uuid, (Staff, Uuid)>,
+    subordinates: HashMap<Uuid, HashSet<Uuid>>,
+    resources: HashMap<Uuid, Resource>,
+}
+
+impl Default for Company {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Company {
     pub fn new() -> Self {
         Self {
-            ceo: None,
-            managers: HashMap::new(),
-            employes: HashMap::new(),
+            ceo_id: None,
+            staff: HashMap::new(),
+            subordinates: HashMap::new(),
+            resources: HashMap::new(),
         }
     }
 
-    pub fn set_ceo(&mut self, ceo: Rc<RefCell<CEO>>) -> Result<()> {
-        self.ceo = Some(ceo);
-        Ok(())
+    pub fn get_resource_amount(&self, staff_id: Uuid) -> Result<Resource> {
+        match self.resources.get(&staff_id) {
+            Some(r) => Ok(*r),
+            None => Err(StaffError::EmployeeNotFound(staff_id)),
+        }
     }
 
-    pub fn get_supervisor_id(&self, staff_entity_id: Uuid) -> Option<Uuid> {
-        if let Some(m) = self.managers.get(&staff_entity_id) {
-            return Some(m.1);
+    pub fn spend_resource(&mut self, staff_id: Uuid, amount: Resource) -> Result<Resource> {
+        if !self.resources.contains_key(&staff_id)
+            || *self.resources.get(&staff_id).unwrap() < amount
+        {
+            return Err(StaffError::InsufficientResourcesError(staff_id));
         }
 
-        if let Some(e) = self.employes.get(&staff_entity_id) {
-            return Some(e.1);
-        }
-
-        None
-    }
-
-    /// Use with methods with `hire_...` methods in objects which implement [`crate::traits::Supervisor`]
-    pub fn add_manager(
-        &mut self,
-        manager: Rc<RefCell<Manager>>,
-        supervisor_id: Uuid,
-    ) -> Result<Rc<RefCell<Manager>>> {
-        let id = manager.as_ref().borrow().get_id();
-        if self.managers.contains_key(&id) {
-            return Err(StaffError::EmployeeAlreadyExists(id));
-        }
-
-        self.managers.insert(id, (manager.clone(), supervisor_id));
-        Ok(manager)
-    }
-
-    pub fn add_employee(
-        &mut self,
-        employee: Rc<RefCell<Worker>>,
-        supervisor_id: Uuid,
-    ) -> Result<Rc<RefCell<Worker>>> {
-        let id = employee.as_ref().borrow().get_id();
-
-        if self.employes.contains_key(&id) {
-            return Err(StaffError::EmployeeAlreadyExists(id));
-        }
-
-        self.employes.insert(id, (employee.clone(), supervisor_id));
-        Ok(employee)
-    }
-
-    fn update_subordinates_supervisor(
-        &mut self,
-        subordinates: HashSet<Uuid>,
-        supervisor_id: Uuid,
-    ) -> Result<()> {
-        for id in subordinates {
-            if let Some(m) = self.managers.get_mut(&id) {
-                m.1 = supervisor_id;
-                continue;
-            } else if let Some(e) = self.employes.get_mut(&id) {
-                e.1 = supervisor_id;
-                continue;
-            } else {
-                return Err(StaffError::EmployeeNotFound(id));
-            }
-        }
-
-        Ok(())
-    }
-
-    ///
-    pub fn layoff_manager(
-        &mut self,
-        manager_id: Uuid,
-        supervisor_id: Uuid,
-    ) -> Result<Rc<RefCell<Manager>>> {
-        let manager = match self.managers.get(&manager_id) {
-            Some(m) => m.0.clone(),
-            None => return Err(StaffError::EmployeeNotFound(manager_id)),
-        };
-
-        if self.ceo.is_some() && self.ceo.as_ref().unwrap().borrow().get_id() == supervisor_id {
-            return self.layoff_manager_by_sv(manager, self.ceo.as_ref().unwrap().clone());
-        }
-
-        let supervisor = match self.managers.get_mut(&manager_id) {
-            Some(m) => m.clone().0,
-            None => return Err(StaffError::EmployeeNotFound(manager_id)),
-        };
-
-        self.layoff_manager_by_sv(manager, supervisor)
-    }
-
-    fn layoff_manager_by_sv<T>(
-        &mut self,
-        manager: Rc<RefCell<Manager>>,
-        sv: Rc<RefCell<T>>,
-    ) -> Result<Rc<RefCell<Manager>>>
-    where
-        T: Supervisor + StaffEntity,
-    {
-        self.transfer_resources(
-            manager.clone(),
-            sv.clone(),
-            manager.borrow().get_resource_amount(),
-        )?;
-        let subordinates = sv.borrow_mut().release_subordinates();
-
-        sv.as_ref()
-            .borrow_mut()
-            .assume_subordinates(subordinates.clone());
-        self.update_subordinates_supervisor(subordinates, sv.as_ref().borrow().get_id())?;
-
-        Ok(manager)
-    }
-
-    pub fn layoff_worker(
-        &mut self,
-        worker_id: Uuid,
-        supervisor_id: Uuid,
-    ) -> Result<Rc<RefCell<Worker>>> {
-        let worker = match self.employes.get(&worker_id) {
-            Some(m) => m.0.clone(),
-            None => return Err(StaffError::EmployeeNotFound(worker_id)),
-        };
-
-        if self.ceo.is_some() && self.ceo.as_ref().unwrap().borrow().get_id() == supervisor_id {
-            return self.layoff_worker_by_sv(worker, self.ceo.as_ref().unwrap().clone());
-        }
-
-        let supervisor = match self.managers.get_mut(&worker_id) {
-            Some(m) => m.clone().0,
-            None => return Err(StaffError::EmployeeNotFound(worker_id)),
-        };
-
-        self.layoff_worker_by_sv(worker, supervisor)
-    }
-
-    fn layoff_worker_by_sv<T>(
-        &mut self,
-        worker: Rc<RefCell<Worker>>,
-        sv: Rc<RefCell<T>>,
-    ) -> Result<Rc<RefCell<Worker>>>
-    where
-        T: StaffEntity,
-    {
-        self.transfer_resources(
-            worker.clone(),
-            sv.clone(),
-            worker.borrow().get_resource_amount(),
-        )?;
-
-        Ok(worker)
-    }
-
-    pub fn transfer(&self, from: Uuid, to: Uuid, amount: Resource) -> Result<Resource> {
-        if let Some(m) = self.managers.get(&from) {
-            return self.transfer_to(m.clone().0, to, amount);
-        } else if let Some(e) = self.employes.get(&from) {
-            return self.transfer_to(e.clone().0, to, amount);
-        } else if let Some(ceo) = self.ceo.as_ref() {
-            if ceo.borrow().get_id() == from {
-                return self.transfer_to(ceo.clone(), to, amount);
-            }
-        }
-
-        return Err(StaffError::EmployeeNotFound(to));
-    }
-
-    fn transfer_to<F>(&self, from: Rc<RefCell<F>>, to: Uuid, amount: Resource) -> Result<Resource>
-    where
-        F: StaffEntity,
-    {
-        if let Some(m) = self.managers.get(&to) {
-            return self.transfer_resources(from, m.clone().0, amount);
-        } else if let Some(e) = self.employes.get(&to) {
-            return self.transfer_resources(from, e.clone().0, amount);
-        } else if let Some(ceo) = self.ceo.as_ref() {
-            if ceo.borrow().get_id() == to {
-                return self.transfer_resources(from, ceo.clone(), amount);
-            }
-        }
-
-        return Err(StaffError::EmployeeNotFound(to));
-    }
-
-    /// Method transfer resources between staff entities in company
-    fn transfer_resources<F, T>(
-        &self,
-        from: Rc<RefCell<F>>,
-        to: Rc<RefCell<T>>,
-        amount: Resource,
-    ) -> Result<Resource>
-    where
-        F: StaffEntity,
-        T: StaffEntity,
-    {
-        from.as_ref().borrow_mut().spend(amount)?;
-        to.as_ref().borrow_mut().recieve_resource(amount)?;
+        *self.resources.get_mut(&staff_id).unwrap() -= amount;
         Ok(amount)
+    }
+
+    pub fn recieve_resource(&mut self, staff_id: Uuid, amount: Resource) -> Result<Resource> {
+        match self.resources.get_mut(&staff_id) {
+            Some(r) => {
+                *r += amount;
+                Ok(amount)
+            }
+            None => Err(StaffError::EmployeeNotFound(staff_id)),
+        }
+    }
+
+    pub fn set_ceo(&mut self, ceo: CEO) -> Result<()> {
+        let ceo_id = ceo.get_id();
+
+        self.ceo_id = Some(ceo_id);
+        self.staff.insert(ceo_id, (Staff::Ceo(ceo), ceo_id));
+        self.resources.insert(ceo_id, 0);
+        Ok(())
+    }
+
+    pub fn get_supervisor_id(&self, staff_id: Uuid) -> Option<Uuid> {
+        self.staff.get(&staff_id).map(|s| s.1)
+    }
+
+    pub fn hire(&mut self, staff_entity: Staff, supervisor_id: Uuid) -> Result<Uuid> {
+        let id = staff_entity.get_id();
+        self.staff_not_exists(id)?;
+
+        self.staff.insert(id, (staff_entity, supervisor_id));
+        self.add_subordinate(supervisor_id, id);
+        self.resources.insert(id, 0);
+        Ok(id)
+    }
+
+    pub fn layoff(&mut self, staff_id: Uuid, supervisor_id: Uuid) -> Result<Staff> {
+        self.is_supervisor_for(supervisor_id, staff_id)?;
+
+        self.staff_exists(staff_id)?;
+        self.staff_exists(supervisor_id)?;
+
+        let resource_transfer = self.get_resource_amount(staff_id)?;
+        self.transfer_resources(staff_id, supervisor_id, resource_transfer)?;
+        self.resources.remove(&staff_id);
+
+        self.move_subordinates(supervisor_id, staff_id)?;
+        Ok(self.staff.remove(&staff_id).unwrap().0)
+    }
+
+    fn is_supervisor_for(&self, supervisor_id: Uuid, staff_id: Uuid) -> Result<()> {
+        if self.subordinates.contains_key(&supervisor_id)
+            && self
+                .subordinates
+                .get(&supervisor_id)
+                .unwrap()
+                .contains(&staff_id)
+        {
+            Ok(())
+        } else {
+            Err(StaffError::NotSupervisorFor(supervisor_id, staff_id))
+        }
+    }
+
+    fn add_subordinate(&mut self, supervisor_id: Uuid, staff_id: Uuid) {
+        if let std::collections::hash_map::Entry::Vacant(e) = self.subordinates.entry(supervisor_id)
+        {
+            e.insert(HashSet::from([staff_id]));
+        } else {
+            self.subordinates
+                .get_mut(&supervisor_id)
+                .unwrap()
+                .insert(staff_id);
+        }
+    }
+
+    fn move_subordinates(&mut self, supervisor_id: Uuid, staff_id: Uuid) -> Result<()> {
+        if !self.subordinates.contains_key(&staff_id) {
+            return Ok(());
+        }
+
+        let subordinates = std::mem::take(self.subordinates.get_mut(&staff_id).unwrap());
+
+        for id in subordinates.clone() {
+            if let Some(s) = self.staff.get_mut(&id) {
+                s.1 = supervisor_id;
+            }
+        }
+
+        self.subordinates
+            .get_mut(&supervisor_id)
+            .unwrap()
+            .extend(subordinates);
+        Ok(())
+    }
+
+    pub fn transfer_resources(
+        &mut self,
+        from: Uuid,
+        to: Uuid,
+        amount: Resource,
+    ) -> Result<Resource> {
+        let transferred_amount: Resource = self.spend_resource(from, amount)?;
+
+        match self.recieve_resource(to, transferred_amount) {
+            Ok(amount) => Ok(amount),
+            Err(e) => {
+                self.recieve_resource(from, transferred_amount)?;
+                Err(e)
+            }
+        }
+    }
+
+    fn staff_not_exists(&self, staff_id: Uuid) -> Result<()> {
+        if self.staff.contains_key(&staff_id) {
+            Err(StaffError::EmployeeAlreadyExists(staff_id))
+        } else {
+            Ok(())
+        }
+    }
+
+    fn staff_exists(&self, staff_id: Uuid) -> Result<()> {
+        if self.staff.contains_key(&staff_id) {
+            Ok(())
+        } else {
+            Err(StaffError::EmployeeNotFound(staff_id))
+        }
     }
 }

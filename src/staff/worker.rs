@@ -1,5 +1,4 @@
 use crate::company::Company;
-use crate::errors::StaffError;
 use crate::traits::{Employee, StaffEntity};
 use crate::types::{Resource, Result};
 use std::cell::RefCell;
@@ -8,7 +7,6 @@ use uuid::Uuid;
 
 pub struct Worker {
     id: Uuid,
-    resource: Resource,
     company: Rc<RefCell<Company>>,
 }
 
@@ -16,7 +14,6 @@ impl Worker {
     pub fn new(company: Rc<RefCell<Company>>) -> Self {
         Self {
             id: Uuid::new_v4(),
-            resource: 0,
             company,
         }
     }
@@ -27,26 +24,23 @@ impl StaffEntity for Worker {
         self.id
     }
 
-    fn get_resource_amount(&self) -> Resource {
-        self.resource
+    fn get_resource_amount(&self) -> Result<Resource> {
+        self.company.borrow().get_resource_amount(self.id)
     }
 
     fn spend(&mut self, amount: Resource) -> Result<Resource> {
-        if self.resource < amount {
-            return Err(StaffError::InsufficientResourcesError(self.id));
-        }
-
-        self.resource -= amount;
-        Ok(amount)
+        self.company.borrow_mut().spend_resource(self.id, amount)
     }
 
     fn send_resource(&mut self, to: Uuid, amount: Resource) -> Result<Resource> {
-        self.company.as_ref().borrow().transfer(self.id, to, amount)
+        self.company
+            .as_ref()
+            .borrow_mut()
+            .transfer_resources(self.id, to, amount)
     }
 
-    fn recieve_resource(&mut self, amount: Resource) -> Result<()> {
-        self.resource -= amount;
-        Ok(())
+    fn recieve_resource(&mut self, amount: Resource) -> Result<Resource> {
+        self.company.borrow_mut().recieve_resource(self.id, amount)
     }
 }
 

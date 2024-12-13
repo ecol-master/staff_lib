@@ -1,3 +1,37 @@
-In many companies, the organizational structure is a strict hierarchy where each employee has a supervisor, except for the top manager. Every supervisor can have any number of subordinates. Suppose that a certain resource is used for operations within the company. Each employee can hire a subordinates, giving a portion of its resource to them. If an employee is dismissed, the remainder of their resource is returned to their supervisor, and all their subordinates become subordinates of their supervisor. Each employee can spend their resource as long as its value remains above zero.
-For simplicity, assume that initially, the company always operates with just the top manager who has a certain amount of resource.
-Task: In rust implement a data structure that would model the distribution of resources in the company according to the rules specified above. Please implement it as user-friendly, reliable library. Also, code should be published on github.
+# staff lib
+## Project overview
+`staff_lib` is a library which defines the traits and its implementations for making the simple hierarchy system for managing company's staff and resources:
+- `Employee`: a company entity with basic functionality.
+- `Supervisor`: a special company role that can manage subordinates.
+- `CEO`: the company's owner, responsible for top-level management.
+- `Company`: a concrete company implementation.
+
+## Library design
+The design of this library follows a few key principles:
+- Only `Company` owns all the data stored in it
+- All staff entites act as view objects used for interaction with the company object, but do not hold data themselves.
+
+## Library defined entities
+**Traits**:
+- [StaffEntity](./src/traits.rs), 
+- [Employee](./src/traits.rs), 
+- [Supervisor](./src/traits.rs), 
+- [CompanyBehaviour](./src/traits.rs), 
+
+**Staff** implementations:
+- [CEO](./src/staff/ceo.rs)  
+- [Manager](./src/staff/manager.rs)
+- [Worker](./src/staff/worker.rs)
+
+**Companies** implementations:
+- [Google](./src/companies/google.rs) 
+
+**Enums**:
+- [Staff](./src/types.rs)
+- [Company](./src/types.rs)
+
+## Create project documentation:
+You can see detailed documentation to this project using command:
+```bash
+cargo doc --open
+```

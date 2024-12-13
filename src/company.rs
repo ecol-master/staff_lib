@@ -29,6 +29,15 @@ impl Company {
         }
     }
 
+    pub fn set_ceo(&mut self, ceo: CEO) -> Result<()> {
+        let ceo_id = ceo.get_id();
+
+        self.ceo_id = Some(ceo_id);
+        self.staff.insert(ceo_id, (Staff::Ceo(ceo), ceo_id));
+        self.resources.insert(ceo_id, 0);
+        Ok(())
+    }
+
     pub fn get_resource_amount(&self, staff_id: Uuid) -> Result<Resource> {
         match self.resources.get(&staff_id) {
             Some(r) => Ok(*r),
@@ -57,15 +66,6 @@ impl Company {
         }
     }
 
-    pub fn set_ceo(&mut self, ceo: CEO) -> Result<()> {
-        let ceo_id = ceo.get_id();
-
-        self.ceo_id = Some(ceo_id);
-        self.staff.insert(ceo_id, (Staff::Ceo(ceo), ceo_id));
-        self.resources.insert(ceo_id, 0);
-        Ok(())
-    }
-
     pub fn get_supervisor_id(&self, staff_id: Uuid) -> Option<Uuid> {
         self.staff.get(&staff_id).map(|s| s.1)
     }
@@ -83,14 +83,13 @@ impl Company {
     pub fn layoff(&mut self, staff_id: Uuid, supervisor_id: Uuid) -> Result<Staff> {
         self.is_supervisor_for(supervisor_id, staff_id)?;
 
-        self.staff_exists(staff_id)?;
-        self.staff_exists(supervisor_id)?;
-
         let resource_transfer = self.get_resource_amount(staff_id)?;
         self.transfer_resources(staff_id, supervisor_id, resource_transfer)?;
         self.resources.remove(&staff_id);
 
         self.move_subordinates(supervisor_id, staff_id)?;
+        self.subordinates.remove(&staff_id);
+
         Ok(self.staff.remove(&staff_id).unwrap().0)
     }
 
@@ -100,6 +99,9 @@ impl Company {
         to: Uuid,
         amount: Resource,
     ) -> Result<Resource> {
+        self.staff_exists(from)?;
+        self.staff_exists(to)?;
+
         let transferred_amount: Resource = self.spend_resource(from, amount)?;
 
         match self.recieve_resource(to, transferred_amount) {
@@ -110,6 +112,8 @@ impl Company {
             }
         }
     }
+
+    /// Private methods
 
     fn is_supervisor_for(&self, supervisor_id: Uuid, staff_id: Uuid) -> Result<()> {
         if self.subordinates.contains_key(&supervisor_id)

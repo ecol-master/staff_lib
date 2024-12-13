@@ -15,10 +15,8 @@ mod tests {
         let company = Rc::new(RefCell::new(Company::Google(Google::new())));
 
         let mut ceo = CEO::new(company.clone());
-        company
-            .borrow_mut()
-            .set_ceo(Staff::Ceo(ceo.clone()))
-            .unwrap();
+        company.borrow_mut().set_ceo(Staff::Ceo(ceo.clone()));
+
         company
             .borrow_mut()
             .recieve_resource(ceo.get_id(), 10000)
@@ -52,10 +50,7 @@ mod tests {
         let company = Rc::new(RefCell::new(Company::Google(Google::new())));
 
         let mut ceo = CEO::new(company.clone());
-        company
-            .borrow_mut()
-            .set_ceo(Staff::Ceo(ceo.clone()))
-            .unwrap();
+        company.borrow_mut().set_ceo(Staff::Ceo(ceo.clone()));
         company
             .borrow_mut()
             .recieve_resource(ceo.get_id(), 50000)

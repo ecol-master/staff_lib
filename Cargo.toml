@@ -7,4 +7,5 @@ edition = "2021"
 name = "staff_lib"
 
 [dependencies]
+rand = "0.8"
 uuid = { version = "1.11.0", features = ["v4"] }

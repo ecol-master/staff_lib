@@ -1,5 +1,6 @@
 use crate::types::Staff;
 use crate::types::{Resource, Result};
+use std::collections::HashSet;
 use uuid::Uuid;
 
 /// [`StaffEntity`] provides basic methods for company staff entity
@@ -26,4 +27,25 @@ pub trait Supervisor {
     fn hire(&mut self, staff_entity: Staff) -> Result<Uuid>;
 
     fn layoff(&mut self, staff_id: Uuid) -> Result<Staff>;
+}
+
+/// [`Company`]
+pub trait Company {
+    fn set_ceo(&mut self, ceo: Staff) -> Result<()>;
+
+    fn hire(&mut self, staff_entity: Staff, supervisor_id: Uuid) -> Result<Uuid>;
+
+    fn layoff(&mut self, staff_id: Uuid, supervisor_id: Uuid) -> Result<Staff>;
+
+    fn transfer_resources(&mut self, from: Uuid, to: Uuid, amount: Resource) -> Result<Resource>;
+
+    fn get_supervisor_id(&self, staff_id: Uuid) -> Option<Uuid>;
+
+    fn get_subordinates(&self, staff_id: Uuid) -> Option<HashSet<Uuid>>;
+
+    fn get_resource_amount(&self, staff_id: Uuid) -> Result<Resource>;
+
+    fn spend_resource(&mut self, staff_id: Uuid, amount: Resource) -> Result<Resource>;
+
+    fn recieve_resource(&mut self, staff_id: Uuid, amount: Resource) -> Result<Resource>;
 }

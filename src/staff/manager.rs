@@ -1,6 +1,7 @@
 use crate::traits::{CompanyBehaviour, Employee, StaffEntity, Supervisor};
 use crate::types::{Company, Resource, Result, Staff};
 use std::cell::RefCell;
+use std::collections::HashSet;
 use std::rc::Rc;
 use uuid::Uuid;
 
@@ -51,16 +52,13 @@ impl Employee for Manager {
 
 impl Supervisor for Manager {
     fn hire(&mut self, staff_entity: Staff) -> Result<Uuid> {
-        self.company
-            .as_ref()
-            .borrow_mut()
-            .hire(staff_entity, self.id)
+        self.company.borrow_mut().hire(staff_entity, self.id)
     }
 
     fn layoff(&mut self, employee_id: Uuid) -> Result<Staff> {
-        self.company
-            .as_ref()
-            .borrow_mut()
-            .layoff(employee_id, self.id)
+        self.company.borrow_mut().layoff(employee_id, self.id)
+    }
+    fn get_subordinates(&self) -> Option<HashSet<Uuid>> {
+        self.company.borrow().get_subordinates(self.id)
     }
 }

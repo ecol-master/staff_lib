@@ -27,6 +27,8 @@ pub trait Supervisor {
     fn hire(&mut self, staff_entity: Staff) -> Result<Uuid>;
 
     fn layoff(&mut self, staff_id: Uuid) -> Result<Staff>;
+
+    fn get_subordinates(&self) -> Option<HashSet<Uuid>>;
 }
 
 /// [`Company`]

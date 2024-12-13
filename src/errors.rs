@@ -4,9 +4,9 @@ use uuid::Uuid;
 pub enum StaffError {
     InsufficientResourcesError(Uuid),
 
-    EmployeeNotFound(Uuid),
+    StaffNotFound(Uuid),
 
-    EmployeeAlreadyExists(Uuid),
+    StaffAlreadyExists(Uuid),
 
-    NotSupervisorFor(Uuid, Uuid),
+    StaffHasNoPermission(Uuid, Uuid),
 }

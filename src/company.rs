@@ -32,7 +32,7 @@ impl Company {
     pub fn get_resource_amount(&self, staff_id: Uuid) -> Result<Resource> {
         match self.resources.get(&staff_id) {
             Some(r) => Ok(*r),
-            None => Err(StaffError::EmployeeNotFound(staff_id)),
+            None => Err(StaffError::StaffNotFound(staff_id)),
         }
     }
 
@@ -53,7 +53,7 @@ impl Company {
                 *r += amount;
                 Ok(amount)
             }
-            None => Err(StaffError::EmployeeNotFound(staff_id)),
+            None => Err(StaffError::StaffNotFound(staff_id)),
         }
     }
 
@@ -94,6 +94,23 @@ impl Company {
         Ok(self.staff.remove(&staff_id).unwrap().0)
     }
 
+    pub fn transfer_resources(
+        &mut self,
+        from: Uuid,
+        to: Uuid,
+        amount: Resource,
+    ) -> Result<Resource> {
+        let transferred_amount: Resource = self.spend_resource(from, amount)?;
+
+        match self.recieve_resource(to, transferred_amount) {
+            Ok(amount) => Ok(amount),
+            Err(e) => {
+                self.recieve_resource(from, transferred_amount)?;
+                Err(e)
+            }
+        }
+    }
+
     fn is_supervisor_for(&self, supervisor_id: Uuid, staff_id: Uuid) -> Result<()> {
         if self.subordinates.contains_key(&supervisor_id)
             && self
@@ -104,7 +121,7 @@ impl Company {
         {
             Ok(())
         } else {
-            Err(StaffError::NotSupervisorFor(supervisor_id, staff_id))
+            Err(StaffError::StaffHasNoPermission(supervisor_id, staff_id))
         }
     }
 
@@ -140,26 +157,9 @@ impl Company {
         Ok(())
     }
 
-    pub fn transfer_resources(
-        &mut self,
-        from: Uuid,
-        to: Uuid,
-        amount: Resource,
-    ) -> Result<Resource> {
-        let transferred_amount: Resource = self.spend_resource(from, amount)?;
-
-        match self.recieve_resource(to, transferred_amount) {
-            Ok(amount) => Ok(amount),
-            Err(e) => {
-                self.recieve_resource(from, transferred_amount)?;
-                Err(e)
-            }
-        }
-    }
-
     fn staff_not_exists(&self, staff_id: Uuid) -> Result<()> {
         if self.staff.contains_key(&staff_id) {
-            Err(StaffError::EmployeeAlreadyExists(staff_id))
+            Err(StaffError::StaffAlreadyExists(staff_id))
         } else {
             Ok(())
         }
@@ -169,7 +169,7 @@ impl Company {
         if self.staff.contains_key(&staff_id) {
             Ok(())
         } else {
-            Err(StaffError::EmployeeNotFound(staff_id))
+            Err(StaffError::StaffNotFound(staff_id))
         }
     }
 }

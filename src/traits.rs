@@ -30,7 +30,7 @@ pub trait Supervisor {
 }
 
 /// [`Company`]
-pub trait Company {
+pub trait CompanyBehaviour {
     fn set_ceo(&mut self, ceo: Staff) -> Result<()>;
 
     fn hire(&mut self, staff_entity: Staff, supervisor_id: Uuid) -> Result<Uuid>;
@@ -41,7 +41,7 @@ pub trait Company {
 
     fn get_supervisor_id(&self, staff_id: Uuid) -> Option<Uuid>;
 
-    fn get_subordinates(&self, staff_id: Uuid) -> Option<HashSet<Uuid>>;
+    fn get_subordinates(&self, supervisor_id: Uuid) -> Option<HashSet<Uuid>>;
 
     fn get_resource_amount(&self, staff_id: Uuid) -> Result<Resource>;
 

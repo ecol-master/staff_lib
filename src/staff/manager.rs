@@ -1,6 +1,5 @@
-use crate::company::Company;
-use crate::traits::{Employee, StaffEntity, Supervisor};
-use crate::types::{Resource, Result, Staff};
+use crate::traits::{CompanyBehaviour, Employee, StaffEntity, Supervisor};
+use crate::types::{Company, Resource, Result, Staff};
 use std::cell::RefCell;
 use std::rc::Rc;
 use uuid::Uuid;

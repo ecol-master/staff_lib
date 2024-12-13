@@ -1,6 +1,5 @@
-use crate::company::Company;
-use crate::traits::{StaffEntity, Supervisor};
-use crate::types::{Resource, Result, Staff};
+use crate::traits::{CompanyBehaviour, StaffEntity, Supervisor};
+use crate::types::{Company, Resource, Result, Staff};
 use std::cell::RefCell;
 use std::rc::Rc;
 use uuid::Uuid;
@@ -26,7 +25,7 @@ impl StaffEntity for CEO {
     }
 
     fn get_resource_amount(&self) -> Result<Resource> {
-        self.company.borrow().get_resource_amount(self.id)
+        self.company.as_ref().borrow().get_resource_amount(self.id)
     }
 
     fn spend(&mut self, amount: Resource) -> Result<Resource> {

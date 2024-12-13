@@ -12,6 +12,7 @@ pub type Resource = u64;
 /// type [`crate::errors::StaffError`]
 pub type Result<T> = std::result::Result<T, StaffError>;
 
+/// [`Staff`] enum represent the different staff members in company
 #[derive(Clone, Debug)]
 pub enum Staff {
     Ceo(CEO),
@@ -20,6 +21,7 @@ pub enum Staff {
 }
 
 impl Staff {
+    /// It is a helper function which help to escape the matching in methods which takes the &self
     fn delegate<T, F>(&self, f: F) -> T
     where
         F: FnOnce(&dyn StaffEntity) -> T,
@@ -31,6 +33,7 @@ impl Staff {
         }
     }
 
+    /// It is a helper function which help to escape the matching in methods which takes the &mut self
     fn delegate_mut<T, F>(&mut self, f: F) -> T
     where
         F: FnOnce(&mut dyn StaffEntity) -> T,
@@ -43,6 +46,9 @@ impl Staff {
     }
 }
 
+/// [`Staff`] implements the [`crate::traits::StaffEntity`] to provide the flexible conversation
+/// with staff entities without knowing its types.
+/// Such implementation helps to work with different staff uniformally.
 impl StaffEntity for Staff {
     fn get_id(&self) -> Uuid {
         self.delegate(|entity| entity.get_id())
@@ -65,12 +71,14 @@ impl StaffEntity for Staff {
     }
 }
 
+/// [`Company`] enum represent the different defined types of Company.
 #[derive(Debug)]
 pub enum Company {
     Google(Google),
 }
 
 impl Company {
+    /// It is a helper function which help to escape the matching in methods which takes the &self
     fn delegate<T, F>(&self, f: F) -> T
     where
         F: FnOnce(&dyn CompanyBehaviour) -> T,
@@ -80,6 +88,7 @@ impl Company {
         }
     }
 
+    /// It is a helper function which help to escape the matching in methods which takes the &mut self
     fn delegate_mut<T, F>(&mut self, f: F) -> T
     where
         F: FnOnce(&mut dyn CompanyBehaviour) -> T,
@@ -90,6 +99,9 @@ impl Company {
     }
 }
 
+/// [`Company`] implements the [`crate::traits::CompanyBehaviour`] to provide the flexible conversation
+/// with different companies.
+/// Such implementation helps to work with different companies uniformally.
 impl CompanyBehaviour for Company {
     fn set_ceo(&mut self, ceo: Staff) {
         self.delegate_mut(|company| company.set_ceo(ceo))

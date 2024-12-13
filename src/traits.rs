@@ -44,7 +44,7 @@ pub trait StaffEntity {
     ///
     /// # Errors
     /// - Returns [`crate::errors::StaffError::InsufficientResourcesError`] if there
-    /// are not enough resources available.
+    ///     are not enough resources available.
     ///
     /// # Example
     /// ```

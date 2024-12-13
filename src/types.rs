@@ -1,3 +1,10 @@
+//! Module provides the pre-defined types fot representing the most frequently used types.
+//! - `Resource`
+//! - `Result`
+//!
+//! Also defines the enumerations: [`crate::types::Staff`] and [`crate::types::Company`] which
+//! helps to work with different entities uniformally.
+
 use crate::companies::google::Google;
 use crate::errors::StaffError;
 use crate::staff::{ceo::CEO, manager::Manager, worker::Worker};

@@ -1,19 +1,23 @@
 #[cfg(test)]
 mod tests {
-    use staff_lib::company::Company;
+    use staff_lib::companies::google::Google;
     use staff_lib::staff::{ceo::CEO, manager::Manager, worker::Worker};
-    use staff_lib::traits::{StaffEntity, Supervisor};
-    use staff_lib::types::Staff;
+    use staff_lib::traits::{CompanyBehaviour, StaffEntity, Supervisor};
+    use staff_lib::types::{Company, Staff};
     use std::cell::RefCell;
     use std::rc::Rc;
     use uuid::Uuid;
 
     #[test]
     fn test_simple() {
-        let company = Rc::new(RefCell::new(Company::new()));
+        let company = Rc::new(RefCell::new(Company::Google(Google::new())));
 
         let mut ceo = CEO::new(company.clone());
-        company.as_ref().borrow_mut().set_ceo(ceo.clone()).unwrap();
+        company
+            .as_ref()
+            .borrow_mut()
+            .set_ceo(Staff::Ceo(ceo.clone()))
+            .unwrap();
 
         let director = Manager::new(company.clone());
         ceo.hire(Staff::Manager(director.clone())).unwrap();
@@ -32,10 +36,14 @@ mod tests {
 
     #[test]
     fn test_layoff_workers_balances() {
-        let company = Rc::new(RefCell::new(Company::new()));
+        let company = Rc::new(RefCell::new(Company::Google(Google::new())));
 
         let mut ceo = CEO::new(company.clone());
-        company.as_ref().borrow_mut().set_ceo(ceo.clone()).unwrap();
+        company
+            .as_ref()
+            .borrow_mut()
+            .set_ceo(Staff::Ceo(ceo.clone()))
+            .unwrap();
         company
             .borrow_mut()
             .recieve_resource(ceo.get_id(), 10000)

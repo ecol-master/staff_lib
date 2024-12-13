@@ -8,9 +8,11 @@ use uuid::Uuid;
 /// A type alias which is used for representing resource type in company hierarchy
 pub type Resource = u64;
 
+/// A wrapper for standart library [`std::result::Result`] with templated value and fixed error
+/// type [`crate::errors::StaffError`]
 pub type Result<T> = std::result::Result<T, StaffError>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Staff {
     Ceo(CEO),
     Manager(Manager),
@@ -63,6 +65,7 @@ impl StaffEntity for Staff {
     }
 }
 
+#[derive(Debug)]
 pub enum Company {
     Google(Google),
 }
@@ -88,7 +91,7 @@ impl Company {
 }
 
 impl CompanyBehaviour for Company {
-    fn set_ceo(&mut self, ceo: Staff) -> Result<()> {
+    fn set_ceo(&mut self, ceo: Staff) {
         self.delegate_mut(|company| company.set_ceo(ceo))
     }
 

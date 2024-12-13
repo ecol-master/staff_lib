@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use uuid::Uuid;
 
+#[derive(Clone, Debug)]
 pub struct Worker {
     id: Uuid,
     company: Rc<RefCell<Company>>,

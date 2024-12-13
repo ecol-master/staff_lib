@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 use uuid::Uuid;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Manager {
     id: Uuid,
     company: Rc<RefCell<Company>>,

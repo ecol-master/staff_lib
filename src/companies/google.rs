@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use uuid::Uuid;
 
+#[derive(Debug)]
 pub struct Google {
     ceo_id: Option<Uuid>,
     staff: HashMap<Uuid, (Staff, Uuid)>,
@@ -95,13 +96,12 @@ impl Google {
 }
 
 impl CompanyBehaviour for Google {
-    fn set_ceo(&mut self, ceo: Staff) -> Result<()> {
+    fn set_ceo(&mut self, ceo: Staff) {
         let ceo_id = ceo.get_id();
 
         self.ceo_id = Some(ceo_id);
         self.staff.insert(ceo_id, (ceo, ceo_id));
         self.resources.insert(ceo_id, 0);
-        Ok(())
     }
 
     fn get_resource_amount(&self, staff_id: Uuid) -> Result<Resource> {
@@ -126,14 +126,22 @@ impl CompanyBehaviour for Google {
         match self.resources.get_mut(&staff_id) {
             Some(r) => {
                 *r += amount;
-                Ok(amount)
+                Ok(*r)
             }
             None => Err(StaffError::StaffNotFound(staff_id)),
         }
     }
 
+    fn get_staff_by_id(&mut self, staff_id: Uuid) -> Option<Staff> {
+        self.staff.get(&staff_id).map(|s| s.0.clone())
+    }
+
     fn get_supervisor_id(&self, staff_id: Uuid) -> Option<Uuid> {
-        self.staff.get(&staff_id).map(|s| s.1)
+        if self.ceo_id.is_some() && staff_id == self.ceo_id.unwrap() {
+            None
+        } else {
+            self.staff.get(&staff_id).map(|s| s.1)
+        }
     }
 
     fn get_subordinates(&self, supervisor_id: Uuid) -> Option<HashSet<Uuid>> {
@@ -141,6 +149,7 @@ impl CompanyBehaviour for Google {
     }
 
     fn hire(&mut self, staff_entity: Staff, supervisor_id: Uuid) -> Result<Uuid> {
+        self.staff_exists(supervisor_id)?;
         let id = staff_entity.get_id();
         self.staff_not_exists(id)?;
 

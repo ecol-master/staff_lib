@@ -9,4 +9,6 @@ pub enum StaffError {
     StaffAlreadyExists(Uuid),
 
     StaffHasNoPermission(Uuid, Uuid),
+
+    CeoAlreadyExists(Uuid),
 }

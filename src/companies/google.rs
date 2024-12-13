@@ -30,7 +30,9 @@ impl Google {
 
     /// Private methods
     fn is_supervisor_for(&self, supervisor_id: Uuid, staff_id: Uuid) -> Result<()> {
-        if self.subordinates.contains_key(&supervisor_id)
+        if self.ceo_id.is_some() && supervisor_id == self.ceo_id.unwrap() {
+            Ok(())
+        } else if self.subordinates.contains_key(&supervisor_id)
             && self
                 .subordinates
                 .get(&supervisor_id)

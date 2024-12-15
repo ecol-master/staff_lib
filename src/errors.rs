@@ -2,12 +2,12 @@
 
 /// Enum representing errors related to staff management in the company.
 #[derive(Debug)]
-pub enum StaffError<ID, R> {
+pub enum Error<ID, R> {
     /// Error indicating that there are not enough resources in staff entity's balance.
     ///
     /// # Parameters
     /// * `staff_id`: The unique identifier of the staff entity.
-    InsufficientResourcesError { id: ID, requied: R, available: R },
+    InsufficientResourcesError { id: ID, required: R, available: R },
 
     /// Error indicating that the staff entity with the given id not found.
     ///

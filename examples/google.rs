@@ -8,14 +8,14 @@ use uuid::Uuid;
 #[derive(Debug)]
 pub struct Manager {
     id: Uuid,
-    name: String,
+    _name: String,
 }
 
 impl Manager {
     fn new(name: String) -> Self {
         Self {
             id: Uuid::new_v4(),
-            name,
+            _name: name,
         }
     }
 }
@@ -61,10 +61,6 @@ impl Google {
 
     fn get_ceo(&self) -> &Manager {
         self.company.get_ceo().unwrap()
-    }
-
-    fn get_resource(&self, staff_id: &Uuid) -> Option<&u64> {
-        self.company.get_resource(staff_id)
     }
 
     fn mint(&mut self, amount: u64) {
@@ -116,8 +112,6 @@ fn main() {
         let manager = Manager::new(name);
         let id = google_company.hire(manager, ceo_id).unwrap();
         google_company.add_service(services.pop().unwrap(), &id);
-
-        dbg!(google_company.get_resource(ceo_id));
     }
 
     for service in google_company.get_services() {

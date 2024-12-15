@@ -14,21 +14,19 @@ The design of this library follows a few key principles:
 ## Library defined entities
 **Traits**:
 - [StaffEntity](./src/traits.rs), 
-- [Employee](./src/traits.rs), 
-- [Supervisor](./src/traits.rs), 
-- [CompanyBehaviour](./src/traits.rs), 
 
-**Staff** implementations:
-- [CEO](./src/staff/ceo.rs)  
-- [Manager](./src/staff/manager.rs)
-- [Worker](./src/staff/worker.rs)
+**Structs**:
+- [Company](./src/company.rs)
 
-**Companies** implementations:
-- [Google](./src/companies/google.rs) 
+## Code examples
 
-**Enums**:
-- [Staff](./src/types.rs)
-- [Company](./src/types.rs)
+In `examples` folder you can find write code examples using this library.
+
+Run concrete example file:
+```
+cargo run --example google
+```
+
 
 ## Create project documentation:
 You can see detailed documentation to this project using command:

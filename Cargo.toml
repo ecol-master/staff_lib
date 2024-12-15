@@ -8,5 +8,6 @@ doctest = false
 name = "staff_lib"
 
 [dependencies]
+num-traits = "0.2.19"
 rand = "0.8"
 uuid = { version = "1.11.0", features = ["v4"] }

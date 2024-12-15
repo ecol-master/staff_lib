@@ -13,8 +13,9 @@
 //! - Only `Company` owns all the data stored in it
 //! - All staff entites act as `view` objects used for interaction with the company object, but do not hold data themselves.
 
-pub mod companies;
+pub mod company;
 pub mod errors;
-pub mod staff;
 pub mod traits;
 pub mod types;
+
+pub use company::Company;

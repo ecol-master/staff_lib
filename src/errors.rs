@@ -1,21 +1,19 @@
 //! Defines [`crate::errors::StaffError`] enum
 
-use uuid::Uuid;
-
 /// Enum representing errors related to staff management in the company.
 #[derive(Debug)]
-pub enum StaffError {
+pub enum StaffError<ID, R> {
     /// Error indicating that there are not enough resources in staff entity's balance.
     ///
     /// # Parameters
     /// * `staff_id`: The unique identifier of the staff entity.
-    InsufficientResourcesError(Uuid),
+    InsufficientResourcesError { id: ID, requied: R, available: R },
 
     /// Error indicating that the staff entity with the given id not found.
     ///
     /// # Parameters
     /// * `staff_id`: The unique identifier of the staff entity.
-    StaffNotFound(Uuid),
+    StaffNotFound { id: ID },
 
     /// Error indicating that the staff entity already exists in the system.
     ///
@@ -24,7 +22,7 @@ pub enum StaffError {
     ///
     /// # Parameters
     /// * `staff_id`: The unique identifier of the staff entity.
-    StaffAlreadyExists(Uuid),
+    StaffAlreadyExists { id: ID },
 
     /// Error indicating that a staff entity does not have the necessary permissions to do some
     /// operations.
@@ -34,5 +32,5 @@ pub enum StaffError {
     ///
     /// # Parameters
     /// * `staff_id`: The unique identifier of the staff entity attempting the operation.
-    StaffHasNoPermission(Uuid, Uuid),
+    StaffHasNoPermission { id: ID },
 }

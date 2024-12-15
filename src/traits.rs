@@ -9,7 +9,7 @@ use std::hash::Hash;
 
 /// [`StaffEntity`] provides basic methods for company staff entity
 pub trait StaffEntity {
-    type ID: Eq + Hash;
+    type ID: Eq + Hash + Clone;
     /// Method return the unique identifier of staff entity in company.
     ///
     /// # Example:

@@ -1,13 +1,8 @@
-//! Module defines traits for making hierarhy for staff managment system.
-//! Defined traits:
-//! - [`crate::traits::StaffEntity`]
-//! - [`crate::traits::Employee`]
-//! - [`crate::traits::Supervisor`],
-//! - [`crate::traits::CompanyBehaviour`]
+//! Module defines [`StaffEntity`] trait for implementing the staff members object for company.
 
 use std::hash::Hash;
 
-/// [`StaffEntity`] provides basic methods for company staff entity
+/// [`StaffEntity`] provides only one method `get_id()`.
 pub trait StaffEntity {
     type ID: Eq + Hash + Clone;
     /// Method return the unique identifier of staff entity in company.

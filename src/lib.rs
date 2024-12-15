@@ -18,3 +18,4 @@ pub mod errors;
 pub mod traits;
 
 pub use company::Company;
+pub use traits::StaffEntity;

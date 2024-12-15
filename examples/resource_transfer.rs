@@ -25,26 +25,25 @@ fn main() {
     let ceo = Worker::new();
     let mut company = Company::<Worker, u64>::new(ceo);
     let start_resource = 100000;
-    company.mint_resource(start_resource);
+    company.mint(start_resource);
 
-    let ceo_id = company.get_ceo().get_id();
+    let ceo_id = company.get_ceo().unwrap().get_id();
     for _ in 0..10 {
         let manager = Worker::new();
-        let manager_id = manager.get_id();
 
-        let _ = company.hire(manager, ceo_id);
+        let id = company.hire(manager, &ceo_id).unwrap();
         for _ in 0..50 {
-            company.hire(Worker::new(), manager_id).unwrap();
+            company.hire(Worker::new(), &id).unwrap();
         }
     }
 
-    for id in company.get_staff() {
+    for id in company.get_all_staff() {
         if id == ceo_id {
             continue;
         }
 
-        company.fire(id).unwrap();
+        company.fire(&id).unwrap();
     }
 
-    assert_eq!(company.get_resource(ceo_id).unwrap(), start_resource);
+    assert_eq!(*company.get_resource(&ceo_id).unwrap(), start_resource);
 }

@@ -23,7 +23,7 @@ mod tests {
     }
 
     #[test]
-    fn test_company_hierarchy() {
+    fn test_resource_transferring() {
         let ceo = Manager::new();
         let ceo_id = ceo.get_id();
 
@@ -31,7 +31,10 @@ mod tests {
         let mint_amount: u64 = 1000;
         company.mint(mint_amount);
 
-        let mut ceo_resource = mint_amount;
+        let target_manager = Manager::new();
+        let target_id = company.hire(target_manager, &ceo_id).unwrap();
+
+        let mut ceo_resource = (mint_amount / 10) * 9;
         for _ in 0..10 {
             let id = company.hire(Manager::new(), &ceo_id).unwrap();
 
@@ -41,19 +44,32 @@ mod tests {
             assert_eq!(*company.get_resource(&id).unwrap(), manager_resource);
             assert_eq!(*company.get_resource(&ceo_id).unwrap(), ceo_resource);
         }
+        dbg!(ceo_resource);
 
-        assert_eq!(company.get_all_staff().len(), 11); // 10 managers and ceo
-        assert_eq!(company.get_subordinates(&ceo_id).unwrap().len(), 10);
+        assert_eq!(company.get_all_staff().len(), 12); // 11 managers and ceo
+        assert_eq!(company.get_subordinates(&ceo_id).unwrap().len(), 11);
 
-        for id in company.get_subordinates(&ceo_id).unwrap() {
-            assert_eq!(company.get_supervisor(id).unwrap(), &ceo_id);
-        }
-
-        let ceo_subordinates = company.get_subordinates(&ceo_id).unwrap();
+        let ceo_subordinates = company.get_subordinates(&ceo_id).unwrap().clone();
         for id in ceo_subordinates.clone() {
-            company.fire(&id).unwrap();
+            let amount = *company.get_resource(&id).unwrap();
+            dbg!(amount);
+            company.transfer(&id, &target_id, amount).unwrap();
         }
 
+        for id in ceo_subordinates.clone() {
+            if id != target_id {
+                assert_eq!(*company.get_resource(&id).unwrap(), 0);
+                company.fire(&id).unwrap();
+            }
+        }
+
+        dbg!(ceo_resource);
+        assert_eq!(
+            *company.get_resource(&target_id).unwrap(),
+            mint_amount - ceo_resource
+        );
+
+        company.fire(&target_id).unwrap();
         assert_eq!(*company.get_resource(&ceo_id).unwrap(), mint_amount);
     }
 }

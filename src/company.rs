@@ -168,7 +168,7 @@ impl<
 
         self.withdraw(from, amount)?;
         self.resources
-            .entry(self.ceo_id.clone())
+            .entry(to.clone())
             .and_modify(|res| *res = *res + amount)
             .or_insert(amount);
         Ok(())

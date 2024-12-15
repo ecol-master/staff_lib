@@ -33,4 +33,7 @@ pub enum Error<ID, R> {
     /// # Parameters
     /// * `staff_id`: The unique identifier of the staff entity attempting the operation.
     StaffHasNoPermission { id: ID },
+
+    ///
+    CannotFireCeo,
 }

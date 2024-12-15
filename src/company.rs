@@ -1,5 +1,6 @@
 use crate::errors::Error;
 use crate::traits::StaffEntity;
+use core::fmt::Debug;
 use num_traits::{FromPrimitive, Num, Zero};
 use std::collections::{HashMap, HashSet};
 use std::ops::Div;
@@ -8,7 +9,7 @@ use std::ops::Div;
 pub struct Company<V, R>
 where
     V: StaffEntity,
-    R: Num + Copy + Zero + PartialOrd + Div<Output = R> + FromPrimitive,
+    R: Num + Copy + Zero + PartialOrd + Div<Output = R> + FromPrimitive + Debug,
 {
     ceo_id: V::ID,
 
@@ -26,8 +27,10 @@ where
     subordinates: HashMap<V::ID, HashSet<V::ID>>,
 }
 
-impl<V: StaffEntity, R: Num + Copy + Zero + PartialOrd + FromPrimitive + Div<Output = R>>
-    Company<V, R>
+impl<
+        V: StaffEntity,
+        R: Num + Copy + Zero + PartialOrd + FromPrimitive + Div<Output = R> + Debug,
+    > Company<V, R>
 {
     pub fn new(ceo: V) -> Self {
         Self {
@@ -63,12 +66,12 @@ impl<V: StaffEntity, R: Num + Copy + Zero + PartialOrd + FromPrimitive + Div<Out
         self.resources.get(staff_id)
     }
 
-    pub fn get_supervisor(&mut self, staff_id: &V::ID) -> Option<&V::ID> {
+    pub fn get_supervisor(&self, staff_id: &V::ID) -> Option<&V::ID> {
         self.supervisors.get(staff_id)
     }
 
-    pub fn get_subordinates(&self, staff_id: V::ID) -> Option<&HashSet<V::ID>> {
-        self.subordinates.get(&staff_id)
+    pub fn get_subordinates(&self, staff_id: &V::ID) -> Option<&HashSet<V::ID>> {
+        self.subordinates.get(staff_id)
     }
 
     pub fn mint(&mut self, amount: R) {
@@ -128,6 +131,10 @@ impl<V: StaffEntity, R: Num + Copy + Zero + PartialOrd + FromPrimitive + Div<Out
     pub fn fire(&mut self, staff_id: &V::ID) -> Result<V, Error<V::ID, R>> {
         self.staff_exists(staff_id)?;
 
+        if *staff_id == self.ceo_id {
+            return Err(Error::CannotFireCeo);
+        }
+
         let supervisor_id = self.get_supervisor(staff_id).unwrap().clone();
         self.supervisors.remove(staff_id);
 
@@ -159,17 +166,11 @@ impl<V: StaffEntity, R: Num + Copy + Zero + PartialOrd + FromPrimitive + Div<Out
             return Err(Error::StaffNotFound { id: to.clone() });
         }
 
-        let resources = self.resources.get_mut(from).unwrap();
-        if *resources < amount {
-            return Err(Error::InsufficientResourcesError {
-                id: from.clone(),
-                available: *resources,
-                required: amount,
-            });
-        }
-
-        let _ = resources.sub(amount);
-        let _ = self.resources.get_mut(to).unwrap().add(amount);
+        self.withdraw(from, amount)?;
+        self.resources
+            .entry(self.ceo_id.clone())
+            .and_modify(|res| *res = *res + amount)
+            .or_insert(amount);
         Ok(())
     }
 

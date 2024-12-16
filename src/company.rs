@@ -42,11 +42,11 @@ impl<
         }
     }
 
-    pub fn get_ceo(&self) -> Option<&V> {
+    pub fn ceo(&self) -> Option<&V> {
         self.staff.get(&self.ceo_id)
     }
 
-    pub fn get_ceo_mut(&mut self) -> Option<&mut V> {
+    pub fn ceo_mut(&mut self) -> Option<&mut V> {
         self.staff.get_mut(&self.ceo_id)
     }
 
@@ -54,23 +54,23 @@ impl<
         self.staff.keys().cloned().collect()
     }
 
-    pub fn get_staff(&self, staff_id: &V::ID) -> Option<&V> {
+    pub fn get(&self, staff_id: &V::ID) -> Option<&V> {
         self.staff.get(staff_id)
     }
 
-    pub fn get_staff_mut(&mut self, staff_id: &V::ID) -> Option<&mut V> {
+    pub fn get_mut(&mut self, staff_id: &V::ID) -> Option<&mut V> {
         self.staff.get_mut(staff_id)
     }
 
-    pub fn get_resource(&self, staff_id: &V::ID) -> Option<&R> {
+    pub fn resource(&self, staff_id: &V::ID) -> Option<&R> {
         self.resources.get(staff_id)
     }
 
-    pub fn get_supervisor(&self, staff_id: &V::ID) -> Option<&V::ID> {
+    pub fn supervisor(&self, staff_id: &V::ID) -> Option<&V::ID> {
         self.supervisors.get(staff_id)
     }
 
-    pub fn get_subordinates(&self, staff_id: &V::ID) -> Option<&HashSet<V::ID>> {
+    pub fn subordinates(&self, staff_id: &V::ID) -> Option<&HashSet<V::ID>> {
         self.subordinates.get(staff_id)
     }
 
@@ -122,7 +122,7 @@ impl<
                 .insert(supervisor_id.clone(), HashSet::from([staff_id.clone()]));
         }
 
-        let amount = *self.get_resource(supervisor_id).unwrap() / R::from_i16(10).unwrap();
+        let amount = *self.resource(supervisor_id).unwrap() / R::from_i16(10).unwrap();
         self.withdraw(supervisor_id, amount)?;
         self.resources.insert(staff_id.clone(), amount);
         Ok(staff_id)
@@ -135,10 +135,10 @@ impl<
             return Err(Error::CannotFireCeo);
         }
 
-        let supervisor_id = self.get_supervisor(staff_id).unwrap().clone();
+        let supervisor_id = self.supervisor(staff_id).unwrap().clone();
         self.supervisors.remove(staff_id);
 
-        let resource = self.get_resource(staff_id).unwrap();
+        let resource = self.resource(staff_id).unwrap();
         self.transfer(staff_id, &supervisor_id, *resource)?;
         self.resources.remove(staff_id);
 
@@ -176,7 +176,7 @@ impl<
 
     /// private methods
     fn staff_exists(&self, staff_id: &V::ID) -> Result<(), Error<V::ID, R>> {
-        self.get_staff(staff_id).ok_or(Error::StaffNotFound {
+        self.get(staff_id).ok_or(Error::StaffNotFound {
             id: staff_id.clone(),
         })?;
         Ok(())

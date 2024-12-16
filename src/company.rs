@@ -60,7 +60,7 @@ impl<
         self.staff.get_mut(&self.ceo_id)
     }
 
-    /// Returns a list of IDs of all staff members in the company.
+    /// Returns a vector of IDs of all staff members in the company.
     pub fn get_all_staff(&self) -> Vec<V::ID> {
         self.staff.keys().cloned().collect()
     }
@@ -92,17 +92,14 @@ impl<
     ///
     /// # Returns
     /// - `Some(&V::ID)`
-    /// - `None` - for CEO ot if staff member dosn't exists
+    /// - `None` - if staff is CEO or if staff member dosn't exists
     pub fn supervisor(&self, staff_id: &V::ID) -> Option<&V::ID> {
         self.supervisors.get(staff_id)
     }
 
+    /// Returns the staff's subordiantes
     pub fn subordinates(&self, staff_id: &V::ID) -> Option<&HashSet<V::ID>> {
         self.subordinates.get(staff_id)
-    }
-
-    fn subordinates_mut(&mut self, staff_id: &V::ID) -> Option<&mut HashSet<V::ID>> {
-        self.subordinates.get_mut(staff_id)
     }
 
     /// Mints (creates) resources and add them to the CEO's balance.
@@ -283,12 +280,12 @@ impl<
             .clone();
 
         // Remove from previours supervisor's subordinates list
-        if let Some(subordinates) = self.subordinates_mut(&current_supervisor) {
+        if let Some(subordinates) = self.subordinates.get_mut(&current_supervisor) {
             subordinates.remove(staff_id);
         }
 
         // Add to the new supervisor's subordinates list
-        if let Some(subordinates) = self.subordinates_mut(&supervisor_id) {
+        if let Some(subordinates) = self.subordinates.get_mut(&supervisor_id) {
             subordinates.insert(staff_id.clone());
         } else {
             self.subordinates

@@ -41,35 +41,35 @@ mod tests {
             let manager_resource = ceo_resource / 10;
             ceo_resource = ceo_resource - manager_resource;
 
-            assert_eq!(*company.get_resource(&id).unwrap(), manager_resource);
-            assert_eq!(*company.get_resource(&ceo_id).unwrap(), ceo_resource);
+            assert_eq!(*company.resource(&id).unwrap(), manager_resource);
+            assert_eq!(*company.resource(&ceo_id).unwrap(), ceo_resource);
         }
         dbg!(ceo_resource);
 
         assert_eq!(company.get_all_staff().len(), 12); // 11 managers and ceo
-        assert_eq!(company.get_subordinates(&ceo_id).unwrap().len(), 11);
+        assert_eq!(company.subordinates(&ceo_id).unwrap().len(), 11);
 
-        let ceo_subordinates = company.get_subordinates(&ceo_id).unwrap().clone();
+        let ceo_subordinates = company.subordinates(&ceo_id).unwrap().clone();
         for id in ceo_subordinates.clone() {
-            let amount = *company.get_resource(&id).unwrap();
+            let amount = *company.resource(&id).unwrap();
             dbg!(amount);
             company.transfer(&id, &target_id, amount).unwrap();
         }
 
         for id in ceo_subordinates.clone() {
             if id != target_id {
-                assert_eq!(*company.get_resource(&id).unwrap(), 0);
+                assert_eq!(*company.resource(&id).unwrap(), 0);
                 company.fire(&id).unwrap();
             }
         }
 
         dbg!(ceo_resource);
         assert_eq!(
-            *company.get_resource(&target_id).unwrap(),
+            *company.resource(&target_id).unwrap(),
             mint_amount - ceo_resource
         );
 
         company.fire(&target_id).unwrap();
-        assert_eq!(*company.get_resource(&ceo_id).unwrap(), mint_amount);
+        assert_eq!(*company.resource(&ceo_id).unwrap(), mint_amount);
     }
 }

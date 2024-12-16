@@ -60,7 +60,7 @@ impl Google {
     }
 
     fn get_ceo(&self) -> &Manager {
-        self.company.get_ceo().unwrap()
+        self.company.ceo().unwrap()
     }
 
     fn mint(&mut self, amount: u64) {
@@ -72,7 +72,7 @@ impl Google {
     }
 
     fn add_service(&mut self, name: String, manager_id: &Uuid) -> Uuid {
-        let budget = self.company.get_resource(manager_id).unwrap() / 2;
+        let budget = self.company.resource(manager_id).unwrap() / 2;
         self.company.withdraw(manager_id, budget).unwrap();
 
         let service_id = Uuid::new_v4();

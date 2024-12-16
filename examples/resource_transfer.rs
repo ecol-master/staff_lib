@@ -27,7 +27,7 @@ fn main() {
     let start_resource = 100000;
     company.mint(start_resource);
 
-    let ceo_id = company.get_ceo().unwrap().get_id();
+    let ceo_id = company.ceo().unwrap().get_id();
     for _ in 0..10 {
         let manager = Worker::new();
 
@@ -45,5 +45,5 @@ fn main() {
         company.fire(&id).unwrap();
     }
 
-    assert_eq!(*company.get_resource(&ceo_id).unwrap(), start_resource);
+    assert_eq!(*company.resource(&ceo_id).unwrap(), start_resource);
 }

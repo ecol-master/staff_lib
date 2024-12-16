@@ -24,5 +24,5 @@ impl StaffEntity for Worker {
 fn main() {
     let ceo = Worker::new();
     let company = Company::<Worker, u64>::new(ceo);
-    dbg!(company.get_ceo());
+    dbg!(company.ceo());
 }

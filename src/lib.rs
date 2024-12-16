@@ -2,12 +2,9 @@
 //! opportunities to `hire` and `layoff` staff members and flexible resouce shring between them.
 //!
 //! Key module elements:
-//! - Traits: [`crate::traits::StaffEntity`], [`crate::traits::Employee`],
-//!     [`crate::traits::Supervisor`] and [`crate::traits::CompanyBehaviour`]
-//! - Staff implementations: [`crate::staff::ceo::CEO`], [`crate::staff::manager::Manager`] and
-//!     [`crate::staff::worker::Worker`]
-//! - Companies implementations: [`crate::companies::google::Google`]
-//! - Defined enums: [`crate::types::Staff`] and [`crate::types::Company`]
+//! - Traits: [`crate::traits::StaffEntity`]
+//! - Struct: [`crate::company::Company`]
+//!
 //!
 //! # Library design overview:
 //! - Only `Company` owns all the data stored in it

@@ -29,15 +29,15 @@ mod tests {
 
         let mut company: Company<Manager, u64> = Company::new(manager);
 
-        assert_eq!(company.get_ceo().unwrap().get_id(), manager_id);
-        assert_eq!(*company.get_resource(&manager_id).unwrap(), 0);
-        assert_eq!(company.get_supervisor(&manager_id), None);
-        assert_eq!(company.get_subordinates(&manager_id), None);
+        assert_eq!(company.ceo().unwrap().get_id(), manager_id);
+        assert_eq!(*company.resource(&manager_id).unwrap(), 0);
+        assert_eq!(company.supervisor(&manager_id), None);
+        assert_eq!(company.subordinates(&manager_id), None);
         assert_eq!(company.get_all_staff().len(), 1);
 
         let mint_amount: u64 = 1000;
         company.mint(mint_amount);
 
-        assert_eq!(*company.get_resource(&manager_id).unwrap(), mint_amount);
+        assert_eq!(*company.resource(&manager_id).unwrap(), mint_amount);
     }
 }

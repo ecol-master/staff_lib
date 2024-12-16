@@ -42,4 +42,7 @@ pub enum Error<ID, R> {
 
     /// Error indicating that a staff entity tries to fire the company's ceo.
     CannotFireCeo,
+
+    /// Error indicating that a staff entity can not be a supervisor for another
+    HierarchyConflict { staff_id: ID, supervisor_id: ID },
 }

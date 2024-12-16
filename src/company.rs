@@ -101,6 +101,10 @@ impl<
         self.subordinates.get(staff_id)
     }
 
+    fn subordinates_mut(&mut self, staff_id: &V::ID) -> Option<&mut HashSet<V::ID>> {
+        self.subordinates.get_mut(staff_id)
+    }
+
     /// Mints (creates) resources and add them to the CEO's balance.
     ///
     /// # Arguments
@@ -126,12 +130,12 @@ impl<
             .resources
             .get_mut(staff_id)
             .ok_or(Error::StaffNotFound {
-                id: staff_id.clone(),
+                staff_id: staff_id.clone(),
             })?;
 
         if *resource < amount {
             return Err(Error::InsufficientResourcesError {
-                id: staff_id.clone(),
+                staff_id: staff_id.clone(),
                 available: *resource,
                 required: amount,
             });
@@ -157,7 +161,9 @@ impl<
         self.staff_exists(supervisor_id)?;
 
         if self.staff.contains_key(&staff.get_id()) {
-            return Err(Error::StaffAlreadyExists { id: staff.get_id() });
+            return Err(Error::StaffAlreadyExists {
+                staff_id: staff.get_id(),
+            });
         }
 
         let staff_id = staff.get_id();
@@ -218,6 +224,83 @@ impl<
         Ok(self.staff.remove(staff_id).unwrap())
     }
 
+    /// Change supervisor for staff member.
+    ///
+    /// # Arguments:
+    /// - `staff_id`: The ID of the staff to change supervisor for.
+    /// - `supervisor_id`: The ID of new supervisor for staff_id.
+    ///
+    /// # Errors:
+    /// - [`Error::StaffNotFound`] if either staff member does not exist.
+    /// - [`crate::errors::Error::HierarchyConflict`] if given `supervisor` is a current
+    /// staff subordinate or in the lists of its subordinates.
+    pub fn change_supervisor(
+        &mut self,
+        staff_id: &V::ID,
+        supervisor_id: &V::ID,
+    ) -> Result<(), Error<V::ID, R>> {
+        if staff_id == supervisor_id {
+            return Ok(());
+        }
+
+        self.staff_exists(staff_id)?;
+        self.staff_exists(supervisor_id)?;
+
+        let mut found = false;
+        let mut subordinates_id: Vec<&V::ID> = Vec::from([staff_id]);
+
+        'outer: while !subordinates_id.is_empty() {
+            let id = subordinates_id.pop().unwrap();
+            if id == supervisor_id {
+                found = true;
+                break;
+            }
+
+            if let Some(subordinates) = self.subordinates(id) {
+                for id in subordinates {
+                    if id == supervisor_id {
+                        found = true;
+                        break 'outer;
+                    }
+
+                    subordinates_id.push(id);
+                }
+            }
+        }
+
+        if found {
+            return Err(Error::HierarchyConflict {
+                staff_id: staff_id.clone(),
+                supervisor_id: supervisor_id.clone(),
+            });
+        }
+
+        let current_supervisor = self
+            .supervisor(staff_id)
+            .ok_or(Error::StaffNotFound {
+                staff_id: staff_id.clone(),
+            })?
+            .clone();
+
+        // Remove from previours supervisor's subordinates list
+        if let Some(subordinates) = self.subordinates_mut(&current_supervisor) {
+            subordinates.remove(staff_id);
+        }
+
+        // Add to the new supervisor's subordinates list
+        if let Some(subordinates) = self.subordinates_mut(&supervisor_id) {
+            subordinates.insert(staff_id.clone());
+        } else {
+            self.subordinates
+                .insert(supervisor_id.clone(), HashSet::from([staff_id.clone()]));
+        }
+
+        // update in global map
+        *self.supervisors.get_mut(staff_id).unwrap() = supervisor_id.clone();
+
+        Ok(())
+    }
+
     /// Transfers resources from one staff member to another.
     ///
     /// # Arguments
@@ -230,11 +313,15 @@ impl<
     /// - [`Error::InsufficientResourcesError`] if the sender has insufficient resources.
     pub fn transfer(&mut self, from: &V::ID, to: &V::ID, amount: R) -> Result<(), Error<V::ID, R>> {
         if !self.staff.contains_key(from) {
-            return Err(Error::StaffNotFound { id: from.clone() });
+            return Err(Error::StaffNotFound {
+                staff_id: from.clone(),
+            });
         }
 
         if !self.staff.contains_key(to) {
-            return Err(Error::StaffNotFound { id: to.clone() });
+            return Err(Error::StaffNotFound {
+                staff_id: to.clone(),
+            });
         }
 
         self.withdraw(from, amount)?;
@@ -248,7 +335,7 @@ impl<
     /// private methods
     fn staff_exists(&self, staff_id: &V::ID) -> Result<(), Error<V::ID, R>> {
         self.get(staff_id).ok_or(Error::StaffNotFound {
-            id: staff_id.clone(),
+            staff_id: staff_id.clone(),
         })?;
         Ok(())
     }

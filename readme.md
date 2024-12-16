@@ -1,6 +1,6 @@
 # staff lib
 ## Project overview
-`staff_lib` is a library which defines the traits and its implementations for making the simple hierarchy system for managing company's staff and resources.
+`staff_lib` is a library which is created for making the simple hierarchy system for managing company's staff and resources.
 
 ## Library design
 The design of this library follows a few key principles:

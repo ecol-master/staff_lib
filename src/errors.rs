@@ -1,4 +1,4 @@
-//! Defines [`crate::errors::StaffError`] enum
+//! Defines [`crate::errors::Error`] enum.
 
 /// Enum representing errors related to staff management in the company.
 #[derive(Debug)]
@@ -7,13 +7,19 @@ pub enum Error<ID, R> {
     ///
     /// # Parameters
     /// * `staff_id`: The unique identifier of the staff entity.
-    InsufficientResourcesError { id: ID, required: R, available: R },
+    /// * `required`: required resoucre amount to apply action.
+    /// * `available `: required resoucre amount exists in staff member's balance.
+    InsufficientResourcesError {
+        staff_id: ID,
+        required: R,
+        available: R,
+    },
 
     /// Error indicating that the staff entity with the given id not found.
     ///
     /// # Parameters
     /// * `staff_id`: The unique identifier of the staff entity.
-    StaffNotFound { id: ID },
+    StaffNotFound { staff_id: ID },
 
     /// Error indicating that the staff entity already exists in the system.
     ///
@@ -22,7 +28,7 @@ pub enum Error<ID, R> {
     ///
     /// # Parameters
     /// * `staff_id`: The unique identifier of the staff entity.
-    StaffAlreadyExists { id: ID },
+    StaffAlreadyExists { staff_id: ID },
 
     /// Error indicating that a staff entity does not have the necessary permissions to do some
     /// operations.
@@ -31,9 +37,9 @@ pub enum Error<ID, R> {
     /// subordinates set.
     ///
     /// # Parameters
-    /// * `staff_id`: The unique identifier of the staff entity attempting the operation.
-    StaffHasNoPermission { id: ID },
+    /// * `id`: The unique identifier of the staff entity attempting the operation.
+    StaffHasNoPermission { staff_id: ID },
 
-    /// Error indicating that a staff entity tries to fire the company's ceo
+    /// Error indicating that a staff entity tries to fire the company's ceo.
     CannotFireCeo,
 }
